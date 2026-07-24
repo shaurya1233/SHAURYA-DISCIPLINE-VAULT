@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAURYA — Discipline Vault</title>
+    <style>
+        /* ==========================================================================
+           ROOT & LUXURY GLASS THEMING (DARK & LIGHT)
+           ========================================================================== */
+        :root {
+            --bg-deep: #07080c;
+            --bg-radial: radial-gradient(circle at 50% 0%, #151928 0%, #07080c 75%);
+            --glass-bg: rgba(18, 22, 36, 0.65);
+            --glass-card-bg: rgba(23, 28, 45, 0.5);
+            --glass-border: rgba(212, 175, 55, 0.2);
+            --glass-border-light: rgba(255, 255, 255, 0.08);
+            --glass-glow: 0 10px 32px 0 rgba(0, 0, 0, 0.5);
+
+            --accent-gold: #d4af37;
+            --accent-gold-glow: rgba(212, 175, 55, 0.35);
+            --accent-emerald: #10b981;
+            --accent-emerald-glow: rgba(16, 185, 129, 0.35);
+            --accent-crimson: #ef4444;
+            --accent-crimson-glow: rgba(239, 68, 68, 0.35);
+            --accent-cyan: #06b6d4;
+            --accent-purple: #a855f7;
+
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-gold: #fef08a;
+
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.light-theme {
+            --bg-deep: #f0f2f5;
+            --bg-radial: radial-gradient(circle at 50% 0%, #ffffff 0%, #e4e7eb 80%);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-card-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(180, 140, 20, 0.3);
+            --glass-border-light: rgba(0, 0, 0, 0.08);
+            --glass-glow: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --text-gold: #854d0e;
+        }
+
+        /* ==========================================================================
+           GLOBAL RESETS & STYLES
+           ========================================================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-deep);
+            background-image: var(--bg-radial);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 60px;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 4px; }
+
+        .glass-card {
+            background: var(--glass-card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border-light);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--glass-glow);
+            transition: var(--transition-smooth);
+        }
+
+        .glass-card:hover { border-color: var(--glass-border); }
+
+        /* ==========================================================================
+           PIN SECURITY OVERLAY
+           ========================================================================== */
+        #pin-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(5, 6, 10, 0.95);
+            backdrop-filter: blur(25px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        #pin-overlay.unlocked { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .pin-vault-icon {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-gold-glow) 0%, transparent 70%);
+            border: 1px solid var(--accent-gold);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px; box-shadow: 0 0 25px var(--accent-gold-glow);
+        }
+        .pin-vault-icon svg { width: 32px; height: 32px; fill: var(--accent-gold); }
+
+        .pin-title { font-size: 1.8rem; letter-spacing: 6px; font-weight: 800; color: var(--accent-gold); margin-bottom: 6px; }
+        .pin-subtitle { font-size: 0.85rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px; }
+
+        .pin-dots { display: flex; gap: 16px; margin-bottom: 35px; }
+        .pin-dot {
+            width: 16px; height: 16px; border-radius: 50%;
+            border: 2px solid rgba(212, 175, 55, 0.4); transition: var(--transition-smooth);
+        }
+        .pin-dot.filled { background: var(--accent-gold); border-color: var(--accent-gold); box-shadow: 0 0 12px var(--accent-gold); }
+        .pin-dot.error { background: var(--accent-crimson); border-color: var(--accent-crimson); animation: shake 0.4s ease; }
+
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; width: 280px; }
+        .key-btn {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-main); font-size: 1.5rem; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition-smooth);
+        }
+        .key-btn:active { transform: scale(0.92); background: rgba(212, 175, 55, 0.2); border-color: var(--accent-gold); }
+
+        /* ==========================================================================
+           MAIN CONTAINER & HEADER
+           ========================================================================== */
+        .app-container {
+            width: 100%; max-width: 1100px; padding: 20px 16px;
+            display: flex; flex-direction: column; gap: 24px;
+            opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .app-container.visible { opacity: 1; transform: translateY(0); }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;
+        }
+
+        .brand-container { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .brand-logo {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-gold), #8a6d1c);
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--accent-gold-glow);
+        }
+        .brand-logo svg { width: 22px; height: 22px; fill: #000; }
+        .brand-title {
+            font-size: 1.5rem; font-weight: 900; letter-spacing: 4px;
+            background: linear-gradient(135deg, var(--text-main) 30%, var(--accent-gold) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .header-nav { display: flex; align-items: center; gap: 10px; }
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border-light);
+            color: var(--text-main); padding: 8px 14px; border-radius: 30px; font-size: 0.85rem;
+            font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: var(--transition-smooth);
+        }
+        .nav-btn:hover { background: rgba(212, 175, 55, 0.15); border-color: var(--accent-gold); }
+        .nav-btn.active { background: var(--accent-gold); color: #000; font-weight: 700; }
+
+        /* ==========================================================================
+           VIEWS & PAGES ROUTER
+           ========================================================================== */
+        .view-page { display: none; flex-direction: column; gap: 24px; }
+        .view-page.active-view { display: flex; }
+
+        /* HERO CARD / DASHBOARD */
+        .hero-dashboard { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media(min-width: 768px) { .hero-dashboard { grid-template-columns: 1.2fr 1fr; } }
+
+        .main-action-card {
+            padding: 28px; display: flex; flex-direction: column; align-items: center; text-align: center; justify-content: center; gap: 16px;
+        }
+
+        .toggle-status-group { display: flex; gap: 12px; width: 100%; max-width: 420px; }
+        .status-btn {
+            flex: 1; padding: 16px 12px; border-radius: var(--radius-md); border: 1px solid var(--glass-border-light);
+            background: rgba(255, 255, 255, 0.03); color: var(--text-muted); font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition-smooth); display: flex; flex-direction: column; align-items: center; gap: 8px;
+        }
+        .status-btn.active-success {
+            background: rgba(16, 185, 129, 0.2); border-color: var(--accent-emerald); color: #ecfdf5;
+            box-shadow: 0 0 20px var(--accent-emerald-glow);
+        }
+        .status-btn.active-broken {
+            background: rgba(239, 68, 68, 0.2); border-color: var(--accent-crimson); color: #fef2f2;
+            box-shadow: 0 0 20px var(--accent-crimson-glow);
+        }
+        .status-btn.disabled-btn {
+            opacity: 0.8;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* TIMELINE FEED */
+        .timeline-card { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+        .timeline-header { display: flex; justify-content: space-between; align-items: center; }
+        .timeline-list { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; padding-right: 4px; }
+        .timeline-item {
+            display: flex; justify-content: space-between; align-items: center; padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-sm); border: 1px solid var(--glass-border-light); font-size: 0.88rem;
+        }
+
+        /* METRICS GRID */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        @media(min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+
+        .stat-card { padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+        .stat-val { font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
+
+        /* ==========================================================================
+           BUTTONS HUB & GRID SYSTEM
+           ========================================================================== */
+        .hub-section { display: flex; flex-direction: column; gap: 16px; margin-bottom: 10px; }
+        .hub-section-title { font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-gold); font-weight: 800; }
+        .hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+
+        .hub-card {
+            padding: 18px; border-radius: var(--radius-md); background: var(--glass-card-bg);
+            border: 1px solid var(--glass-border-light); cursor: pointer; display: flex; align-items: center; gap: 12px;
+            transition: var(--transition-smooth);
+        }
+        .hub-card:hover { transform: translateY(-3px); border-color: var(--accent-gold); background: rgba(212, 175, 55, 0.08); }
+        .hub-card-icon {
+            width: 38px; height: 38px; border-radius: 10px; background: rgba(255, 255, 255, 0.05);
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+        }
+        .hub-card-text { display: flex; flex-direction: column; }
+        .hub-card-title { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+        .hub-card-sub { font-size: 0.72rem; color: var(--text-muted); }
+
+        /* ==========================================================================
+           CALENDAR & ANALYTICS
+           ========================================================================== */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+        .calendar-day-head { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; padding: 6px 0; }
+        .calendar-cell {
+            aspect-ratio: 1; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border-light); display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.85rem; cursor: pointer; transition: var(--transition-smooth); position: relative;
+        }
+        .calendar-cell:hover:not(.empty) { border-color: var(--accent-gold); }
+        .calendar-cell.today { border: 2px solid var(--accent-gold); font-weight: 800; }
+        .calendar-cell.success { background: rgba(16, 185, 129, 0.25); border-color: var(--accent-emerald); color: #ecfdf5; }
+        .calendar-cell.broken { background: rgba(239, 68, 68, 0.2); border-color: var(--accent-crimson); color: #fef2f2; }
+
+        .heatmap-wrapper { overflow-x: auto; padding-bottom: 8px; }
+        .heatmap-grid { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; gap: 4px; min-width: 600px; }
+        .heatmap-node { width: 12px; height: 12px; border-radius: 2px; background: rgba(255, 255, 255, 0.05); }
+        .heatmap-node.level-3 { background: rgba(16, 185, 129, 1); box-shadow: 0 0 6px var(--accent-emerald); }
+
+        /* ==========================================================================
+           UTILITIES (STOPWATCH, BREATHING, YOGA, FOCUS, BATH)
+           ========================================================================== */
+        .utility-box { padding: 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; }
+        .timer-display { font-size: 3rem; font-weight: 900; font-family: monospace; color: var(--accent-gold); letter-spacing: 2px; }
+
+        .breathing-circle {
+            width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, var(--accent-gold-glow) 0%, transparent 70%);
+            border: 2px solid var(--accent-gold); display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: 700; transition: transform 4s ease-in-out;
+        }
+        .breathing-circle.inhale { transform: scale(1.6); background: radial-gradient(circle, var(--accent-cyan) 0%, transparent 70%); border-color: var(--accent-cyan); }
+        .breathing-circle.exhale { transform: scale(0.9); }
+
+        /* ==========================================================================
+           MODALS & OVERLAYS
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; visibility: hidden; transition: var(--transition-smooth);
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-body { width: 100%; max-width: 500px; padding: 28px; position: relative; display: flex; flex-direction: column; gap: 18px; }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
+
+        input[type="text"], input[type="password"], input[type="date"], textarea {
+            width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--glass-border-light);
+            padding: 12px 16px; border-radius: var(--radius-sm); color: var(--text-main); font-family: inherit; font-size: 0.95rem; outline: none;
+        }
+        input:focus, textarea:focus { border-color: var(--accent-gold); box-shadow: 0 0 10px var(--accent-gold-glow); }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--accent-gold), #9a7b1c); border: none; color: #000;
+            font-weight: 800; padding: 12px 20px; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition-smooth); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 0 15px var(--accent-gold-glow); }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================================================
+         1. PIN SECURITY LOCK
+         ========================================================================== -->
+    <div id="pin-overlay">
+        <div class="pin-vault-icon">
+            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        </div>
+        <div class="pin-title">SHAURYA</div>
+        <div class="pin-subtitle">PRIVATE DISCIPLINE VAULT</div>
+
+        <div class="pin-dots">
+            <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+        </div>
+
+        <div class="keypad">
+            <button class="key-btn" onclick="app.enterPin('1')">1</button>
+            <button class="key-btn" onclick="app.enterPin('2')">2</button>
+            <button class="key-btn" onclick="app.enterPin('3')">3</button>
+            <button class="key-btn" onclick="app.enterPin('4')">4</button>
+            <button class="key-btn" onclick="app.enterPin('5')">5</button>
+            <button class="key-btn" onclick="app.enterPin('6')">6</button>
+            <button class="key-btn" onclick="app.enterPin('7')">7</button>
+            <button class="key-btn" onclick="app.enterPin('8')">8</button>
+            <button class="key-btn" onclick="app.enterPin('9')">9</button>
+            <button class="key-btn" style="font-size:0.9rem" onclick="app.clearPin()">CLR</button>
+            <button class="key-btn" onclick="app.enterPin('0')">0</button>
+            <button class="key-btn" style="font-size:0.9rem" onclick="app.deletePin()">⌫</button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         2. MAIN APPLICATION WORKSPACE
+         ========================================================================== -->
+    <div class="app-container" id="app-container">
+        
+        <!-- Header Bar -->
+        <header class="glass-card">
+            <div class="brand-container" onclick="app.showView('dashboard')">
+                <div class="brand-logo">
+                    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z"/></svg>
+                </div>
+                <div class="brand-title">SHAURYA</div>
+            </div>
+
+            <div class="header-nav">
+                <button class="nav-btn active" id="nav-dashboard" onclick="app.showView('dashboard')">Dashboard</button>
+                <button class="nav-btn" id="nav-hub" onclick="app.showView('hub')">🎛️ Buttons Hub</button>
+                <button class="nav-btn" onclick="app.lockVault()" style="color:var(--accent-crimson)">🔒 Lock</button>
+            </div>
+        </header>
+
+        <!-- ==========================================================================
+             VIEW: MAIN DASHBOARD
+             ========================================================================== -->
+        <div class="view-page active-view" id="view-dashboard">
+            
+            <div class="hero-dashboard">
+                <!-- Main Daily Action Card -->
+                <div class="glass-card main-action-card">
+                    <div style="font-size:0.8rem; letter-spacing:2px; color:var(--text-muted); text-transform:uppercase;" id="today-date-label">Today's Discipline Status</div>
+                    
+                    <div class="toggle-status-group">
+                        <button class="status-btn" id="btn-status-success" onclick="app.setTodayStatus('success')">
+                            <span style="font-size:1.5rem">✅</span>
+                            <span>I Stayed Disciplined Today</span>
+                        </button>
+                        <button class="status-btn" id="btn-status-broken" onclick="app.setTodayStatus('broken')">
+                            <span style="font-size:1.5rem">❌</span>
+                            <span>I Broke My Promise Today</span>
+                        </button>
+                    </div>
+
+                    <div id="today-lock-notice" style="display:none; font-size:0.78rem; color:var(--text-muted); margin-top:6px;">
+                        🔒 Record saved for today. Use <a href="#" onclick="app.openEditEntryModal(); return false;" style="color:var(--accent-gold); text-decoration:underline;">✏️ Edit Entry</a> to change.
+                    </div>
+                </div>
+
+                <!-- Motivation Wall Banner -->
+                <div class="glass-card" style="padding:24px; display:flex; flex-direction:column; justify-space-between; border-left:4px solid var(--accent-gold);">
+                    <div>
+                        <div style="font-size:0.75rem; letter-spacing:2px; color:var(--accent-gold); font-weight:800; text-transform:uppercase; margin-bottom:8px;">Daily Motivation</div>
+                        <div style="font-size:1.1rem; font-style:italic;" id="quote-text">"Your future deserves your discipline."</div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+                        <span style="font-size:0.75rem; color:var(--text-muted)">SHAURYA VAULT</span>
+                        <button class="nav-btn" onclick="app.nextQuote()">Next Quote ›</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metrics Overview -->
+            <div class="stats-grid">
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Current Streak</div>
+                    <div class="stat-val" style="color:var(--accent-gold)" id="val-current-streak">0 Days</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Longest Streak</div>
+                    <div class="stat-val" style="color:var(--accent-cyan)" id="val-longest-streak">0 Days</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Total Disciplined</div>
+                    <div class="stat-val" style="color:var(--accent-emerald)" id="val-total-days">0 Days</div>
+                </div>
+                <div class="glass-card stat-card">
+                    <div class="stat-label">Monthly Rate</div>
+                    <div class="stat-val" style="color:var(--accent-purple)" id="val-success-rate">0%</div>
+                </div>
+            </div>
+
+            <!-- Today's Activity Timeline -->
+            <div class="glass-card timeline-card">
+                <div class="timeline-header">
+                    <div style="font-weight:800; font-size:1.05rem; display:flex; align-items:center; gap:8px;">
+                        <span>📅</span> Today's Activity Timeline
+                    </div>
+                    <button class="nav-btn" onclick="app.showModal('modal-add-activity')">+ Log Activity</button>
+                </div>
+                <div class="timeline-list" id="today-timeline-list"></div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             VIEW: BUTTONS HUB
+             ========================================================================== -->
+        <div class="view-page" id="view-hub">
+            <div class="glass-card" style="padding:20px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:1.2rem; font-weight:800;">🎛️ Complete Buttons Hub</div>
+                <button class="nav-btn" onclick="app.showView('dashboard')">← Back to Dashboard</button>
+            </div>
+
+            <!-- DAILY SECTION -->
+            <div class="hub-section">
+                <div class="hub-section-title">Daily Actions</div>
+                <div class="hub-grid">
+                    <div class="hub-card" onclick="app.setTodayStatus('success')">
+                        <div class="hub-card-icon">✅</div>
+                        <div class="hub-card-text"><span class="hub-card-title">Stayed Disciplined Today</span><span class="hub-card-sub">Record success</span></div>
+                    </div>
+                    <div class="hub-card" onclick="app.setTodayStatus('broken')">
+                        <div class="hub-card-icon">❌</div>
+                        <div class="hub-card-text"><span class="hub-card-title">Broke My Promise Today</span><span class="hub-card-sub">Record setback</span></div>
+                    </div>
+                    <div class="hub-card" onclick="app.openEditEntryModal()">
+                        <div class="hub-card-icon">✏️</div>
+                        <div class="hub-card-text"><span class="hub-card-title">Edit Today's Entry</span><span class="hub-card-sub">Modify date log</span></div>
+                    </div>
+                    <div class="hub-card" onclick="app.removeTodayEntry()">
+                        <div class="hub-card-icon">🗑️</div>
+                        <div class="hub-card-text"><span class="hub-card-title">Remove Wrong Entry</span><span class="hub-card-sub">Clear current day</span></div>
+                    </div>
+                    <div class="hub-card" onclick="app.showView('calendar')">
+                        <div class="hub-card-icon">📅</div>
+                        <div class="hub-card-text"><span class="hub-card-title">View Calendar</span><span class="hub-card-sub">Full monthly grid</span></div>
+                    </div>
+                    <div class="hub-card" onclick="app.showView('analytics')">
+                        <div class="hub-card-icon">📈</div>
+                        <div class="hub-card-text"><span class="hub-card-title">View Statistics</span><span class="hub-card-sub">Charts & reports</span></div>
+                    </div>
+                    <div class="hub-card" onclick="app.showModalGeneric('🔥 Current Streak', 'Keep going strong! Consistency builds your destiny.')">
+                        <div class="hub-card-icon">🔥</div>
+                        <div class="hub-card-text"><span class="hub-card-title">View Current Streak</span><span class="hub-card-sub">Streak inspector</span></div>
+                    </div>
+                    <div class="hub-card" onclick="app.showView('rewards')">
+                        <div class="hub-card-icon">🏆</div>
+                        <div class="hub-card-text"><span class="hub-card-title">View Achievements</span><span class="hub-card-sub">Unlocked badges</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOTIVATION SECTION -->
+            <div class="hub-section">
+                <div class="hub-section-title">Motivation Vault</div>
+                <div class="hub-grid">
+                    <div class="hub-card" onclick="app.openMotivationModal('I Need Strength')"><div class="hub-card-icon">🛡️</div><div class="hub-card-text"><span class="hub-card-title">I Need Strength</span><span class="hub-card-sub">Mental fortitude</span></div></div>
+                    <div class="hub-card" onclick="app.openMotivationModal('Why I Started')"><div class="hub-card-icon">💭</div><div class="hub-card-text"><span class="hub-card-title">Why I Started</span><span class="hub-card-sub">Core purpose</span></div></div>
+                    <div class="hub-card" onclick="app.openMotivationModal('My Goals')"><div class="hub-card-icon">🎯</div><div class="hub-card-text"><span class="hub-card-title">My Goals</span><span class="hub-card-sub">Target achievements</span></div></div>
+                    <div class="hub-card" onclick="app.openMotivationModal('Future Me')"><div class="hub-card-icon">🚀</div><div class="hub-card-text"><span class="hub-card-title">Future Me</span><span class="hub-card-sub">Long-term vision</span></div></div>
+                    <div class="hub-card" onclick="app.openMotivationModal('Family First')"><div class="hub-card-icon">❤️</div><div class="hub-card-text"><span class="hub-card-title">Family First</span><span class="hub-card-sub">Your deepest reason</span></div></div>
+                    <div class="hub-card" onclick="app.openMotivationModal('Reset My Mind')"><div class="hub-card-icon">🧠</div><div class="hub-card-text"><span class="hub-card-title">Reset My Mind</span><span class="hub-card-sub">Clear urge state</span></div></div>
+                    <div class="hub-card" onclick="app.openMotivationModal('Fresh Start')"><div class="hub-card-icon">🌅</div><div class="hub-card-text"><span class="hub-card-title">Fresh Start</span><span class="hub-card-sub">Clean slate</span></div></div>
+                    <div class="hub-card" onclick="app.openMotivationModal('Stay Strong')"><div class="hub-card-icon">⭐</div><div class="hub-card-text"><span class="hub-card-title">Stay Strong</span><span class="hub-card-sub">Unshakable focus</span></div></div>
+                </div>
+            </div>
+
+            <!-- PERSONAL SECTION -->
+            <div class="hub-section">
+                <div class="hub-section-title">Personal Vault</div>
+                <div class="hub-grid">
+                    <div class="hub-card" onclick="app.showView('journal')"><div class="hub-card-icon">📓</div><div class="hub-card-text"><span class="hub-card-title">My Journal</span><span class="hub-card-sub">Private entries</span></div></div>
+                    <div class="hub-card" onclick="app.showView('journal')"><div class="hub-card-icon">✍️</div><div class="hub-card-text"><span class="hub-card-title">Write Today's Thoughts</span><span class="hub-card-sub">Reflection editor</span></div></div>
+                    <div class="hub-card" onclick="app.showView('journal')"><div class="hub-card-icon">📖</div><div class="hub-card-text"><span class="hub-card-title">Read Previous Notes</span><span class="hub-card-sub">Journal archive</span></div></div>
+                    <div class="hub-card" onclick="app.showView('promises')"><div class="hub-card-icon">📌</div><div class="hub-card-text"><span class="hub-card-title">My Promises</span><span class="hub-card-sub">Sacred vows</span></div></div>
+                    <div class="hub-card" onclick="app.showView('promises')"><div class="hub-card-icon">🎯</div><div class="hub-card-text"><span class="hub-card-title">My Mission</span><span class="hub-card-sub">Life purpose</span></div></div>
+                </div>
+            </div>
+
+            <!-- UTILITIES SECTION -->
+            <div class="hub-section">
+                <div class="hub-section-title">Utilities & Trackers</div>
+                <div class="hub-grid">
+                    <div class="hub-card" onclick="app.showUtility('stopwatch')"><div class="hub-card-icon">⏱️</div><div class="hub-card-text"><span class="hub-card-title">Stopwatch</span><span class="hub-card-sub">Precision timer</span></div></div>
+                    <div class="hub-card" onclick="app.showUtility('breathing')"><div class="hub-card-icon">🧘</div><div class="hub-card-text"><span class="hub-card-title">Yoga / Breathing</span><span class="hub-card-sub">Paced breathing session</span></div></div>
+                    <div class="hub-card" onclick="app.logBath()"><div class="hub-card-icon">Shower</div><div class="hub-card-text"><span class="hub-card-title">Bath Tracker</span><span class="hub-card-sub">Instant 1-tap log</span></div></div>
+                    <div class="hub-card" onclick="app.showUtility('stopwatch')"><div class="hub-card-icon">🎵</div><div class="hub-card-text"><span class="hub-card-title">Focus Session</span><span class="hub-card-sub">Deep work timer</span></div></div>
+                    <div class="hub-card" onclick="app.showUtility('breathing')"><div class="hub-card-icon">🌬️</div><div class="hub-card-text"><span class="hub-card-title">Guided Breathing</span><span class="hub-card-sub">Paced lung visualizer</span></div></div>
+                </div>
+            </div>
+
+            <!-- SETTINGS & BACKUP -->
+            <div class="hub-section">
+                <div class="hub-section-title">Settings & Emergency</div>
+                <div class="hub-grid">
+                    <div class="hub-card" onclick="app.toggleTheme('dark')"><div class="hub-card-icon">🌙</div><div class="hub-card-text"><span class="hub-card-title">Dark Mode</span><span class="hub-card-sub">Vault luxury dark</span></div></div>
+                    <div class="hub-card" onclick="app.toggleTheme('light')"><div class="hub-card-icon">☀️</div><div class="hub-card-text"><span class="hub-card-title">Light Mode</span><span class="hub-card-sub">Clean light style</span></div></div>
+                    <div class="hub-card" onclick="app.showModal('modal-change-pin')"><div class="hub-card-icon">🔒</div><div class="hub-card-text"><span class="hub-card-title">Change PIN</span><span class="hub-card-sub">Security update</span></div></div>
+                    <div class="hub-card" onclick="app.exportBackup()"><div class="hub-card-icon">💾</div><div class="hub-card-text"><span class="hub-card-title">Backup / Export Data</span><span class="hub-card-sub">Download JSON file</span></div></div>
+                    <div class="hub-card" onclick="document.getElementById('file-import-input').click()"><div class="hub-card-icon">📥</div><div class="hub-card-text"><span class="hub-card-title">Import Data</span><span class="hub-card-sub">Restore JSON file</span></div></div>
+                    <div class="hub-card" onclick="app.showModal('modal-reset-data')"><div class="hub-card-icon">♻️</div><div class="hub-card-text"><span class="hub-card-title">Reset Data</span><span class="hub-card-sub">Factory wipe</span></div></div>
+                    <div class="hub-card" onclick="app.showEmergency('shield')" style="border-color:var(--accent-crimson)"><div class="hub-card-icon">🚨</div><div class="hub-card-text"><span class="hub-card-title">Emergency Shield</span><span class="hub-card-sub">Immediate urge lock</span></div></div>
+                </div>
+            </div>
+
+            <input type="file" id="file-import-input" style="display:none" accept=".json" onchange="app.importBackup(event)">
+        </div>
+
+        <!-- ==========================================================================
+             VIEW: CALENDAR
+             ========================================================================== -->
+        <div class="view-page" id="view-calendar">
+            <div class="glass-card" style="padding:24px; display:flex; flex-direction:column; gap:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <button class="nav-btn" onclick="app.changeMonth(-1)">‹ Prev</button>
+                    <div style="font-size:1.2rem; font-weight:800;" id="cal-month-year-label">July 2026</div>
+                    <button class="nav-btn" onclick="app.changeMonth(1)">Next ›</button>
+                </div>
+
+                <div class="calendar-grid" id="calendar-grid"></div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             VIEW: ANALYTICS & HEATMAP
+             ========================================================================== -->
+        <div class="view-page" id="view-analytics">
+            <div class="glass-card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div style="font-size:1.1rem; font-weight:800;">📊 Yearly Discipline Heatmap</div>
+                <div class="heatmap-wrapper">
+                    <div class="heatmap-grid" id="heatmap-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             VIEW: JOURNAL
+             ========================================================================== -->
+        <div class="view-page" id="view-journal">
+            <div class="glass-card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:1.1rem; font-weight:800;">📓 Vault Journal</div>
+                    <input type="date" id="journal-date-input" style="width:auto" onchange="app.loadJournalForDate()">
+                </div>
+                <textarea id="journal-textarea" style="min-height:220px;" placeholder="Write your private thoughts, victories, and reflections here..."></textarea>
+                <button class="btn-gold" onclick="app.saveJournal()">Save Journal Entry</button>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             VIEW: PROMISES & MISSION
+             ========================================================================== -->
+        <div class="view-page" id="view-promises">
+            <div class="glass-card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div style="font-size:1.1rem; font-weight:800;">📌 Sacred Promises & Mission</div>
+                <textarea id="mission-textarea" style="min-height:120px;" placeholder="Write your ultimate mission statement..."></textarea>
+                <button class="btn-gold" onclick="app.saveMission()">Save Mission Statement</button>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             VIEW: UTILITIES
+             ========================================================================== -->
+        <div class="view-page" id="view-utilities">
+            <div class="glass-card utility-box" id="util-stopwatch-box">
+                <div style="font-size:1.2rem; font-weight:800;">⏱️ Vault Stopwatch</div>
+                <div class="timer-display" id="stopwatch-display">00:00:00</div>
+                <div style="display:flex; gap:12px;">
+                    <button class="btn-gold" onclick="app.toggleStopwatch()">Start / Stop</button>
+                    <button class="nav-btn" onclick="app.resetStopwatch()">Reset</button>
+                </div>
+            </div>
+
+            <div class="glass-card utility-box" id="util-breathing-box">
+                <div style="font-size:1.2rem; font-weight:800;">🌬️ Guided Breathing Visualizer</div>
+                <div class="breathing-circle" id="breathing-circle">BREATHE</div>
+                <button class="btn-gold" onclick="app.toggleBreathing()">Start Session</button>
+            </div>
+        </div>
+
+        <!-- ==========================================================================
+             VIEW: REWARDS
+             ========================================================================== -->
+        <div class="view-page" id="view-rewards">
+            <div class="glass-card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+                <div style="font-size:1.2rem; font-weight:800;">🏅 Hall of Discipline & Achievements</div>
+                <div class="hub-grid" id="achievements-grid"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================================================
+         MODALS & OVERLAYS
+         ========================================================================== -->
+    <div class="modal-overlay" id="modal-generic">
+        <div class="glass-card modal-body">
+            <button class="modal-close" onclick="app.closeModal('modal-generic')">×</button>
+            <div style="font-size:1.2rem; font-weight:800; color:var(--accent-gold);" id="modal-generic-title">Modal Title</div>
+            <div style="font-size:0.95rem; line-height:1.6;" id="modal-generic-content">Content goes here...</div>
+        </div>
+    </div>
+
+    <!-- EDIT ENTRY MODAL -->
+    <div class="modal-overlay" id="modal-edit-entry">
+        <div class="glass-card modal-body">
+            <button class="modal-close" onclick="app.closeModal('modal-edit-entry')">×</button>
+            <div style="font-size:1.2rem; font-weight:800; color:var(--accent-gold);">✏️ Edit Entry</div>
+            <div style="font-size:0.85rem; color:var(--text-muted);">Modify or correct any date's discipline record.</div>
+            
+            <label style="font-size:0.8rem; color:var(--text-muted); margin-bottom:-10px;">Target Date:</label>
+            <input type="date" id="edit-entry-date" onchange="app.onEditDateChange()">
+
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:6px;">
+                <button class="status-btn" id="edit-btn-success" onclick="app.setEditStatus('success')" style="width:100%; flex-direction:row; justify-content:center; gap:10px; padding:12px;">
+                    <span>✅ Mark as Stayed Disciplined</span>
+                </button>
+                <button class="status-btn" id="edit-btn-broken" onclick="app.setEditStatus('broken')" style="width:100%; flex-direction:row; justify-content:center; gap:10px; padding:12px;">
+                    <span>❌ Mark as Broke Promise</span>
+                </button>
+                <button class="nav-btn" style="width:100%; justify-content:center; color:var(--accent-crimson); padding:12px; border-color:var(--accent-crimson);" onclick="app.clearEditStatus()">
+                    <span>🗑️ Clear Record For This Date</span>
+                </button>
+            </div>
+            <button class="btn-gold" style="margin-top:10px;" onclick="app.saveEditEntry()">Save Changes</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-add-activity">
+        <div class="glass-card modal-body">
+            <button class="modal-close" onclick="app.closeModal('modal-add-activity')">×</button>
+            <div style="font-size:1.2rem; font-weight:800; color:var(--accent-gold);">Log Today's Activity</div>
+            <input type="text" id="activity-custom-input" placeholder="e.g. Yoga — 20 min, Bath, Stopwatch 1h 25m">
+            <button class="btn-gold" onclick="app.addCustomActivity()">Add to Timeline</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-change-pin">
+        <div class="glass-card modal-body">
+            <button class="modal-close" onclick="app.closeModal('modal-change-pin')">×</button>
+            <div style="font-size:1.2rem; font-weight:800; color:var(--accent-gold);">Change Vault PIN</div>
+            <input type="password" id="input-new-pin" maxlength="4" placeholder="Enter New 4-Digit PIN">
+            <button class="btn-gold" onclick="app.saveNewPin()">Update PIN</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-reset-data">
+        <div class="glass-card modal-body">
+            <button class="modal-close" onclick="app.closeModal('modal-reset-data')">×</button>
+            <div style="font-size:1.2rem; font-weight:800; color:var(--accent-crimson);">🚨 WIPE ALL VAULT DATA</div>
+            <div>This will permanently delete all records, streaks, journal entries, and history. This action cannot be undone unless you have a backup JSON file.</div>
+            <button class="btn-gold" style="background:var(--accent-crimson); color:#fff;" onclick="app.confirmWipeAll()">PERMANENTLY WIPE DATA</button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         JAVASCRIPT ENGINE & STORAGE CONTROLLER
+         ========================================================================== -->
+    <script>
+        class ShauryaApp {
+            constructor() {
+                this.STORAGE_KEY = "shaurya_vault_data_v3";
+                this.inputPin = "";
+                
+                this.state = {
+                    pin: "2405",
+                    theme: "dark",
+                    records: {}, // "YYYY-MM-DD": { status: "success"|"broken", timeline: [] }
+                    journal: {},
+                    mission: "",
+                    promises: []
+                };
+
+                this.quotes = [
+                    "Your future deserves your discipline.",
+                    "Your goals matter more than temporary urges.",
+                    "Every disciplined day makes you stronger.",
+                    "Small victories become lifelong success.",
+                    "Build habits your future self will thank you for.",
+                    "Your mind is stronger than your impulses.",
+                    "Choose progress over regret.",
+                    "Discipline creates freedom."
+                ];
+                this.quoteIdx = 0;
+
+                this.viewYear = new Date().getFullYear();
+                this.viewMonth = new Date().getMonth();
+
+                this.stopwatchInterval = null;
+                this.stopwatchSeconds = 0;
+                this.selectedEditStatus = null;
+
+                this.init();
+            }
+
+            init() {
+                this.loadState();
+                this.applyTheme(this.state.theme);
+                this.setTodayLabel();
+            }
+
+            /* ==========================================================================
+               STORAGE ENGINE
+               ========================================================================== */
+            loadState() {
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (saved) {
+                    try {
+                        this.state = Object.assign({}, this.state, JSON.parse(saved));
+                    } catch(e) { console.error("Error loading state", e); }
+                } else {
+                    this.saveState();
+                }
+            }
+
+            saveState() {
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+            }
+
+            exportBackup() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
+                const dlAnchor = document.createElement('a');
+                dlAnchor.setAttribute("href", dataStr);
+                dlAnchor.setAttribute("download", `SHAURYA_VAULT_BACKUP_${this.getTodayKey()}.json`);
+                document.body.appendChild(dlAnchor);
+                dlAnchor.click();
+                dlAnchor.remove();
+            }
+
+            importBackup(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (imported && imported.pin) {
+                            this.state = imported;
+                            this.saveState();
+                            alert("Vault Data Successfully Restored!");
+                            location.reload();
+                        }
+                    } catch(err) { alert("Invalid Backup File!"); }
+                };
+                reader.readAsText(file);
+            }
+
+            confirmWipeAll() {
+                localStorage.removeItem(this.STORAGE_KEY);
+                location.reload();
+            }
+
+            /* ==========================================================================
+               PIN & NAVIGATION
+               ========================================================================== */
+            enterPin(d) {
+                if (this.inputPin.length < 4) {
+                    this.inputPin += d;
+                    this.updatePinDots();
+                    if (this.inputPin.length === 4) setTimeout(() => this.verifyPin(), 100);
+                }
+            }
+            deletePin() { this.inputPin = this.inputPin.slice(0, -1); this.updatePinDots(); }
+            clearPin() { this.inputPin = ""; this.updatePinDots(); }
+
+            updatePinDots() {
+                const dots = document.querySelectorAll('.pin-dot');
+                dots.forEach((dot, i) => {
+                    if (i < this.inputPin.length) dot.classList.add('filled');
+                    else dot.classList.remove('filled', 'error');
+                });
+            }
+
+            verifyPin() {
+                if (this.inputPin === this.state.pin) {
+                    document.getElementById('pin-overlay').classList.add('unlocked');
+                    document.getElementById('app-container').classList.add('visible');
+                    this.renderAll();
+                } else {
+                    document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+                    setTimeout(() => this.clearPin(), 400);
+                }
+            }
+
+            lockVault() {
+                this.clearPin();
+                document.getElementById('pin-overlay').classList.remove('unlocked');
+                document.getElementById('app-container').classList.remove('visible');
+            }
+
+            saveNewPin() {
+                const newPin = document.getElementById('input-new-pin').value;
+                if (newPin.length === 4 && !isNaN(newPin)) {
+                    this.state.pin = newPin;
+                    this.saveState();
+                    this.closeModal('modal-change-pin');
+                    alert('PIN successfully updated!');
+                } else {
+                    alert('PIN must be 4 numbers!');
+                }
+            }
+
+            showView(viewId) {
+                document.querySelectorAll('.view-page').forEach(p => p.classList.remove('active-view'));
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+                const target = document.getElementById(`view-${viewId}`);
+                if (target) target.classList.add('active-view');
+
+                const navBtn = document.getElementById(`nav-${viewId}`);
+                if (navBtn) navBtn.classList.add('active');
+
+                if (viewId === 'calendar') this.renderCalendar();
+                if (viewId === 'analytics') this.renderHeatmap();
+                if (viewId === 'rewards') this.renderRewards();
+            }
+
+            /* ==========================================================================
+               DAILY DISCIPLINE LOGIC (ONE CLICK PER CALENDAR DAY)
+               ========================================================================== */
+            getTodayKey() {
+                const now = new Date();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                return `${now.getFullYear()}-${m}-${d}`;
+            }
+
+            setTodayLabel() {
+                const now = new Date();
+                document.getElementById('today-date-label').textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+
+            setTodayStatus(status) {
+                const key = this.getTodayKey();
+                
+                // RESTRICTION: Disable multiple clicks if today already recorded
+                if (this.state.records[key] && this.state.records[key].status) {
+                    alert("Today's status is already recorded and locked. Please use '✏️ Edit Today's Entry' if you want to modify it.");
+                    return;
+                }
+
+                if (!this.state.records[key]) this.state.records[key] = { status: "", timeline: [] };
+                
+                this.state.records[key].status = status;
+                
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                this.state.records[key].timeline.unshift({ 
+                    time: timeStr, 
+                    text: status === 'success' ? "Marked Stayed Disciplined" : "Marked Promise Broken" 
+                });
+
+                this.saveState();
+                this.renderAll();
+            }
+
+            removeTodayEntry() {
+                const key = this.getTodayKey();
+                delete this.state.records[key];
+                this.saveState();
+                this.renderAll();
+            }
+
+            /* ==========================================================================
+               EDIT ENTRY MODAL SYSTEM (CORRECT TODAY OR PREVIOUS DATES)
+               ========================================================================== */
+            openEditEntryModal(dateKey = null) {
+                const targetKey = dateKey || this.getTodayKey();
+                document.getElementById('edit-entry-date').value = targetKey;
+                this.selectedEditStatus = this.state.records[targetKey]?.status || null;
+                this.updateEditModalUI();
+                this.showModal('modal-edit-entry');
+            }
+
+            onEditDateChange() {
+                const dateKey = document.getElementById('edit-entry-date').value;
+                this.selectedEditStatus = this.state.records[dateKey]?.status || null;
+                this.updateEditModalUI();
+            }
+
+            setEditStatus(status) {
+                this.selectedEditStatus = status;
+                this.updateEditModalUI();
+            }
+
+            clearEditStatus() {
+                this.selectedEditStatus = 'clear';
+                this.updateEditModalUI();
+            }
+
+            updateEditModalUI() {
+                const btnSucc = document.getElementById('edit-btn-success');
+                const btnBrok = document.getElementById('edit-btn-broken');
+
+                btnSucc.classList.remove('active-success');
+                btnBrok.classList.remove('active-broken');
+
+                if (this.selectedEditStatus === 'success') btnSucc.classList.add('active-success');
+                if (this.selectedEditStatus === 'broken') btnBrok.classList.add('active-broken');
+            }
+
+            saveEditEntry() {
+                const dateKey = document.getElementById('edit-entry-date').value;
+                if (!dateKey) return;
+
+                if (this.selectedEditStatus === 'clear') {
+                    delete this.state.records[dateKey];
+                } else if (this.selectedEditStatus) {
+                    if (!this.state.records[dateKey]) {
+                        this.state.records[dateKey] = { status: "", timeline: [] };
+                    }
+                    const prevStatus = this.state.records[dateKey].status;
+                    this.state.records[dateKey].status = this.selectedEditStatus;
+
+                    if (prevStatus !== this.selectedEditStatus) {
+                        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        this.state.records[dateKey].timeline.unshift({
+                            time: timeStr,
+                            text: `Edited status: ${this.selectedEditStatus === 'success' ? 'Disciplined ✅' : 'Broke Promise ❌'}`
+                        });
+                    }
+                }
+
+                this.saveState();
+                this.renderAll();
+                this.closeModal('modal-edit-entry');
+            }
+
+            addCustomActivity(textStr = null) {
+                const key = this.getTodayKey();
+                const input = document.getElementById('activity-custom-input');
+                const text = textStr || input.value.trim();
+
+                if (!text) return;
+
+                if (!this.state.records[key]) this.state.records[key] = { status: "", timeline: [] };
+
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                this.state.records[key].timeline.unshift({ time: timeStr, text: text });
+
+                if (input) input.value = '';
+                this.closeModal('modal-add-activity');
+                this.saveState();
+                this.renderTimeline();
+            }
+
+            logBath() {
+                this.addCustomActivity("Shower / Bath Completed 🚿");
+                alert("Bath activity logged to Today's Timeline!");
+            }
+
+            /* ==========================================================================
+               RENDER ENGINE & CALCULATIONS
+               ========================================================================== */
+            renderAll() {
+                this.renderStatusButtons();
+                this.renderMetrics();
+                this.renderTimeline();
+                if (document.getElementById('view-calendar').classList.contains('active-view')) this.renderCalendar();
+            }
+
+            renderStatusButtons() {
+                const key = this.getTodayKey();
+                const rec = this.state.records[key];
+
+                const btnSuccess = document.getElementById('btn-status-success');
+                const btnBroken = document.getElementById('btn-status-broken');
+                const lockNotice = document.getElementById('today-lock-notice');
+
+                btnSuccess.classList.remove('active-success', 'disabled-btn');
+                btnBroken.classList.remove('active-broken', 'disabled-btn');
+
+                if (rec && rec.status) {
+                    if (rec.status === 'success') btnSuccess.classList.add('active-success');
+                    if (rec.status === 'broken') btnBroken.classList.add('active-broken');
+                    
+                    // LOCK BOTH BUTTONS IMMEDIATELY IF CLICKED TODAY
+                    btnSuccess.classList.add('disabled-btn');
+                    btnBroken.classList.add('disabled-btn');
+                    lockNotice.style.display = 'block';
+                } else {
+                    lockNotice.style.display = 'none';
+                }
+            }
+
+            calculateStreaks() {
+                const sortedKeys = Object.keys(this.state.records)
+                    .filter(k => this.state.records[k].status === 'success')
+                    .sort();
+
+                let currentStreak = 0;
+                let longestStreak = 0;
+                let tempStreak = 0;
+
+                let prev = null;
+                sortedKeys.forEach(k => {
+                    const curr = new Date(k);
+                    if (prev) {
+                        const diff = Math.round((curr - prev) / (1000 * 60 * 60 * 24));
+                        if (diff === 1) tempStreak++;
+                        else tempStreak = 1;
+                    } else tempStreak = 1;
+
+                    if (tempStreak > longestStreak) longestStreak = tempStreak;
+                    prev = curr;
+                });
+
+                let checkDate = new Date();
+                while (true) {
+                    const m = String(checkDate.getMonth() + 1).padStart(2, '0');
+                    const d = String(checkDate.getDate()).padStart(2, '0');
+                    const k = `${checkDate.getFullYear()}-${m}-${d}`;
+
+                    if (this.state.records[k] && this.state.records[k].status === 'success') {
+                        currentStreak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else break;
+                }
+
+                return { currentStreak, longestStreak, totalDays: sortedKeys.length };
+            }
+
+            renderMetrics() {
+                const streaks = this.calculateStreaks();
+                document.getElementById('val-current-streak').textContent = `${streaks.currentStreak} Days`;
+                document.getElementById('val-longest-streak').textContent = `${streaks.longestStreak} Days`;
+                document.getElementById('val-total-days').textContent = `${streaks.totalDays} Days`;
+
+                const now = new Date();
+                const currentMonthDays = now.getDate();
+                const mPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                const monthlySuccesses = Object.keys(this.state.records)
+                    .filter(k => k.startsWith(mPrefix) && this.state.records[k].status === 'success').length;
+
+                const rate = currentMonthDays > 0 ? Math.round((monthlySuccesses / currentMonthDays) * 100) : 0;
+                document.getElementById('val-success-rate').textContent = `${rate}%`;
+            }
+
+            renderTimeline() {
+                const list = document.getElementById('today-timeline-list');
+                list.innerHTML = '';
+
+                const key = this.getTodayKey();
+                const rec = this.state.records[key];
+
+                if (!rec || !rec.timeline || rec.timeline.length === 0) {
+                    list.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">No activity logged for today yet.</div>`;
+                    return;
+                }
+
+                rec.timeline.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'timeline-item';
+                    div.innerHTML = `<span>${item.text}</span><span style="color:var(--text-muted); font-size:0.75rem">${item.time}</span>`;
+                    list.appendChild(div);
+                });
+            }
+
+            /* ==========================================================================
+               CALENDAR VIEW (ONLY ONE STRICT RESULT PER DATE)
+               ========================================================================== */
+            renderCalendar() {
+                const grid = document.getElementById('calendar-grid');
+                grid.innerHTML = '';
+
+                const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                document.getElementById('cal-month-year-label').textContent = `${months[this.viewMonth]} ${this.viewYear}`;
+
+                ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(d => {
+                    const head = document.createElement('div');
+                    head.className = 'calendar-day-head';
+                    head.textContent = d;
+                    grid.appendChild(head);
+                });
+
+                const firstDayIndex = new Date(this.viewYear, this.viewMonth, 1).getDay();
+                const padding = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+                const daysInMonth = new Date(this.viewYear, this.viewMonth + 1, 0).getDate();
+
+                for (let i = 0; i < padding; i++) {
+                    const empty = document.createElement('div');
+                    empty.className = 'calendar-cell empty';
+                    grid.appendChild(empty);
+                }
+
+                const todayKey = this.getTodayKey();
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'calendar-cell';
+                    cell.textContent = d;
+
+                    const m = String(this.viewMonth + 1).padStart(2, '0');
+                    const dayStr = String(d).padStart(2, '0');
+                    const k = `${this.viewYear}-${m}-${dayStr}`;
+
+                    if (k === todayKey) cell.classList.add('today');
+
+                    // ONLY ONE STRICT RESULT PER DATE
+                    if (this.state.records[k]) {
+                        if (this.state.records[k].status === 'success') {
+                            cell.classList.add('success');
+                        } else if (this.state.records[k].status === 'broken') {
+                            cell.classList.add('broken');
+                        }
+                    }
+
+                    cell.onclick = () => this.openEditEntryModal(k);
+                    grid.appendChild(cell);
+                }
+            }
+
+            changeMonth(delta) {
+                this.viewMonth += delta;
+                if (this.viewMonth < 0) { this.viewMonth = 11; this.viewYear--; }
+                if (this.viewMonth > 11) { this.viewMonth = 0; this.viewYear++; }
+                this.renderCalendar();
+            }
+
+            renderHeatmap() {
+                const grid = document.getElementById('heatmap-grid');
+                grid.innerHTML = '';
+
+                const currentYear = new Date().getFullYear();
+                const startDate = new Date(currentYear, 0, 1);
+                const endDate = new Date(currentYear, 11, 31);
+
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const dayStr = String(d.getDate()).padStart(2, '0');
+                    const k = `${d.getFullYear()}-${m}-${dayStr}`;
+
+                    const node = document.createElement('div');
+                    node.className = 'heatmap-node';
+
+                    if (this.state.records[k] && this.state.records[k].status === 'success') {
+                        node.classList.add('level-3');
+                    }
+                    grid.appendChild(node);
+                }
+            }
+
+            /* ==========================================================================
+               UTILITIES & TIMERS
+               ========================================================================== */
+            showUtility(type) {
+                this.showView('utilities');
+                document.getElementById('util-stopwatch-box').style.display = type === 'stopwatch' ? 'flex' : 'none';
+                document.getElementById('util-breathing-box').style.display = type === 'breathing' ? 'flex' : 'none';
+            }
+
+            toggleStopwatch() {
+                if (this.stopwatchInterval) {
+                    clearInterval(this.stopwatchInterval);
+                    this.stopwatchInterval = null;
+                } else {
+                    this.stopwatchInterval = setInterval(() => {
+                        this.stopwatchSeconds++;
+                        const hrs = String(Math.floor(this.stopwatchSeconds / 3600)).padStart(2, '0');
+                        const mins = String(Math.floor((this.stopwatchSeconds % 3600) / 60)).padStart(2, '0');
+                        const secs = String(this.stopwatchSeconds % 60).padStart(2, '0');
+                        document.getElementById('stopwatch-display').textContent = `${hrs}:${mins}:${secs}`;
+                    }, 1000);
+                }
+            }
+
+            resetStopwatch() {
+                if (this.stopwatchInterval) clearInterval(this.stopwatchInterval);
+                this.stopwatchInterval = null;
+                this.stopwatchSeconds = 0;
+                document.getElementById('stopwatch-display').textContent = "00:00:00";
+            }
+
+            toggleBreathing() {
+                const circle = document.getElementById('breathing-circle');
+                if (circle.classList.contains('inhale')) {
+                    circle.classList.remove('inhale');
+                    circle.classList.add('exhale');
+                    circle.textContent = "EXHALE";
+                } else {
+                    circle.classList.remove('exhale');
+                    circle.classList.add('inhale');
+                    circle.textContent = "INHALE";
+                }
+            }
+
+            /* ==========================================================================
+               MOTIVATION & EMERGENCY
+               ========================================================================== */
+            nextQuote() {
+                this.quoteIdx = (this.quoteIdx + 1) % this.quotes.length;
+                document.getElementById('quote-text').textContent = `"${this.quotes[this.quoteIdx]}"`;
+            }
+
+            openMotivationModal(title) {
+                const quotesMap = {
+                    'I Need Strength': 'You have survived 100% of your hardest days. You are built for discomfort.',
+                    'Why I Started': 'Remember the pain that brought you to your knees. Never trade long-term freedom for 5 seconds of pleasure.',
+                    'My Goals': 'Dominance over self. Freedom of mind. Absolute control over actions.',
+                    'Future Me': 'Your future self is begging you to hold the line today.',
+                    'Family First': 'Be the wall of protection for those who rely on you.',
+                    'Reset My Mind': 'Take 3 deep breaths. The urge is a wave. It reaches a peak and dissolves.',
+                    'Fresh Start': 'The past is written in stone. The next hour is a blank canvas.',
+                    'Stay Strong': 'Weakness is a choice. So is discipline. Choose.'
+                };
+                this.showModalGeneric(title, quotesMap[title] || "Stay disciplined.");
+            }
+
+            showEmergency(type) {
+                this.showModalGeneric("🚨 EMERGENCY SHIELD MODE", "STAY GROUNDED. Close your eyes, take 5 deep breaths, and let the temporary urge pass. You are in total command.");
+            }
+
+            /* ==========================================================================
+               JOURNAL & PROMISES
+               ========================================================================== */
+            loadJournalForDate() {
+                const dt = document.getElementById('journal-date-input').value;
+                document.getElementById('journal-textarea').value = this.state.journal[dt] || '';
+            }
+
+            saveJournal() {
+                const dt = document.getElementById('journal-date-input').value || this.getTodayKey();
+                const text = document.getElementById('journal-textarea').value;
+                this.state.journal[dt] = text;
+                this.saveState();
+                this.addCustomActivity("Journal entry written 📓");
+                alert("Journal Entry Saved!");
+            }
+
+            saveMission() {
+                this.state.mission = document.getElementById('mission-textarea').value;
+                this.saveState();
+                alert("Mission Statement Updated!");
+            }
+
+            /* ==========================================================================
+               THEMES & REWARDS
+               ========================================================================== */
+            toggleTheme(theme) {
+                this.state.theme = theme;
+                this.applyTheme(theme);
+                this.saveState();
+            }
+
+            applyTheme(theme) {
+                if (theme === 'light') document.body.classList.add('light-theme');
+                else document.body.classList.remove('light-theme');
+            }
+
+            renderRewards() {
+                const grid = document.getElementById('achievements-grid');
+                grid.innerHTML = '';
+
+                const streaks = this.calculateStreaks();
+                const badges = [
+                    { title: "Day 1 Recruit", icon: "🥉", unlocked: streaks.totalDays >= 1 },
+                    { title: "7-Day Warrior", icon: "⚔️", unlocked: streaks.longestStreak >= 7 },
+                    { title: "30-Day Master", icon: "👑", unlocked: streaks.longestStreak >= 30 },
+                    { title: "Vault Guardian", icon: "🛡️", unlocked: streaks.totalDays >= 100 }
+                ];
+
+                badges.forEach(b => {
+                    const card = document.createElement('div');
+                    card.className = 'hub-card';
+                    card.style.opacity = b.unlocked ? '1' : '0.3';
+                    card.innerHTML = `<div class="hub-card-icon">${b.icon}</div><div class="hub-card-text"><span class="hub-card-title">${b.title}</span><span class="hub-card-sub">${b.unlocked ? 'Unlocked' : 'Locked'}</span></div>`;
+                    grid.appendChild(card);
+                });
+            }
+
+            /* ==========================================================================
+               MODAL HELPERS
+               ========================================================================== */
+            showModal(id) { document.getElementById(id).classList.add('active'); }
+            closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+            showModalGeneric(title, content) {
+                document.getElementById('modal-generic-title').textContent = title;
+                document.getElementById('modal-generic-content').textContent = content;
+                this.showModal('modal-generic');
+            }
+        }
+
+        // Initialize App Global
+        const app = new ShauryaApp();
+    </script>
+</body>
+</html>
